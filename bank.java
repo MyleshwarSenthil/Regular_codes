@@ -16,7 +16,7 @@ class bank{
 
 class samp{
     public void ope(){
-        Scanner sc=new Scanner(System.in);
+        Scanner sc=new Scanner(System.in);  
         System.out.println("What do you want to do? ");
         System.err.println("1:Deposit\n2:Withdrawl \n3:Check balance");
         System.err.println("Enter your option: ");
