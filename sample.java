@@ -15,5 +15,6 @@ class sample{
         for(int j=0;j<arr.length;j++){
             System.out.println(arr[j]);
         }
+        System.out.println("Hai");
     }
 }
