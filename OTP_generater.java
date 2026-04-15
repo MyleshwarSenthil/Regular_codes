@@ -1,13 +1,13 @@
 import java.util.*;
 
-class OTP_generator{
+class OTP_generater{
     public static void main(String[] args){
         String s;
         Scanner sc=new Scanner(System.in);
         do { 
             Scanner z=new Scanner(System.in);
             Random r=new Random();
-            int b=r.nextInt((9999 - 1000) + 1)+ 1000;
+            int b=r.nextInt((999999 - 100000) + 1)+ 100000;
             System.out.println(b);
             System.out.print("Enter the OTP: ");
             int y=z.nextInt();
@@ -21,5 +21,6 @@ class OTP_generator{
             s=sc.nextLine();
             
         } while (s.equals("y"));
+        System.out.println("Thanks Bye...");
     }
 }
