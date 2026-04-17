@@ -1,6 +1,6 @@
 import java.util.*;
 
-class bank{
+public class bank{
     public static void main(String[] args){
         
         Scanner sc=new Scanner(System.in);
@@ -22,7 +22,7 @@ class samp{
         System.err.println("Enter your option: ");
         int userinput=sc.nextInt();
         oper o = new oper();
-        if(userinput==1){
+        if (userinput == 1){
             o.deposit();
         }
         else if(userinput==2){

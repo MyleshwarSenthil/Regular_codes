@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon Footprint Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0f0a;
+    --surface: #111811;
+    --surface2: #182018;
+    --border: rgba(100,200,100,0.12);
+    --border2: rgba(100,200,100,0.22);
+    --green: #4caf50;
+    --green-light: #81c784;
+    --green-dim: rgba(76,175,80,0.15);
+    --green-dim2: rgba(76,175,80,0.08);
+    --amber: #ffb74d;
+    --red: #ef5350;
+    --text: #e8f5e9;
+    --text2: #a5d6a7;
+    --text3: #558b5a;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(76,175,80,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(76,175,80,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* Header */
+  header { text-align: center; padding: 2.5rem 0 2rem; }
+  .logo-mark {
+    width: 56px; height: 56px; margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--green-dim);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .logo-mark svg { width: 26px; height: 26px; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.2); }
+    50% { box-shadow: 0 0 0 12px rgba(76,175,80,0); }
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  h1 span { color: var(--green); }
+  .subtitle { color: var(--text3); font-size: 14px; margin-top: 0.5rem; font-weight: 300; }
+
+  /* Nav tabs */
+  .nav {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 2rem;
+  }
+  .nav-btn {
+    flex: 1; padding: 10px; border: none; background: transparent;
+    color: var(--text3); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-btn.active {
+    background: var(--green-dim);
+    color: var(--green-light);
+    border: 1px solid var(--border2);
+  }
+  .nav-btn:hover:not(.active) { color: var(--text2); background: var(--green-dim2); }
+
+  /* Pages */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* Slider rows */
+  .slider-row { margin-bottom: 1.1rem; }
+  .slider-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .slider-label span { font-size: 13px; color: var(--text2); font-weight: 300; }
+  .slider-label .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--green-light);
+    background: var(--green-dim);
+    padding: 2px 10px; border-radius: 20px;
+    min-width: 70px; text-align: center;
+  }
+
+  input[type=range] {
+    width: 100%; height: 4px;
+    -webkit-appearance: none; appearance: none;
+    background: var(--surface2);
+    border-radius: 2px; outline: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--green);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px rgba(76,175,80,0.4);
+    transition: box-shadow 0.2s;
+  }
+  input[type=range]:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 16px rgba(76,175,80,0.6);
+  }
+
+  /* Calculate button */
+  .calc-btn {
+    width: 100%; padding: 16px;
+    background: var(--green);
+    color: #0a0f0a; border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer; margin-top: 0.5rem;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .calc-btn:hover { background: var(--green-light); transform: translateY(-1px); }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* Results */
+  .result-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(76,175,80,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .result-grade {
+    font-family: 'Syne', sans-serif;
+    font-size: 5rem; font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .result-label { font-size: 13px; color: var(--text3); margin-bottom: 1.5rem; font-weight: 300; }
+  .result-big {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem; font-weight: 700;
+    line-height: 1; color: var(--text);
+  }
+  .result-unit { font-size: 14px; color: var(--text3); margin-top: 4px; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 10px; margin-bottom: 1rem;
+  }
+  .metric {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem; text-align: center;
+  }
+  .metric .mlabel { font-size: 11px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric .mval { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; }
+
+  /* Breakdown bars */
+  .breakdown { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .brow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .brow:last-child { margin-bottom: 0; }
+  .blabel { font-size: 12px; color: var(--text2); width: 80px; flex-shrink: 0; }
+  .btrack { flex: 1; background: var(--surface2); border-radius: 3px; height: 8px; overflow: hidden; }
+  .bfill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .bnum { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; width: 65px; text-align: right; color: var(--text2); }
+
+  /* Chart */
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .chart-inner { max-width: 280px; margin: 0 auto; }
+
+  /* Tips */
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 10px;
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .tip-card:hover { border-color: var(--border2); }
+  .tip-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: 50%; background: var(--green-dim);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .tip-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .tip-desc { font-size: 12px; color: var(--text3); font-weight: 300; line-height: 1.5; }
+  .tip-save { font-size: 11px; color: var(--green); margin-top: 4px; font-weight: 500; }
+
+  /* History */
+  .history-empty { text-align: center; padding: 3rem; color: var(--text3); font-size: 14px; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .history-date { font-size: 12px; color: var(--text3); }
+  .history-val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+  .history-grade { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--green-dim); color: var(--green-light); margin-left: 8px; }
+  .clear-btn {
+    width: 100%; padding: 12px;
+    background: transparent; color: var(--text3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    cursor: pointer; margin-top: 1rem; transition: all 0.2s;
+  }
+  .clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Compare bar */
+  .compare-section { margin-top: 1rem; }
+  .cmp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .cmp-label { font-size: 12px; color: var(--text3); width: 110px; flex-shrink: 0; }
+  .cmp-track { flex: 1; background: var(--surface2); border-radius: 3px; height: 8px; }
+  .cmp-fill { height: 8px; border-radius: 3px; transition: width 0.5s; }
+  .cmp-val { font-size: 12px; color: var(--text2); width: 50px; text-align: right; font-family: 'Syne', sans-serif; font-weight: 600; }
+
+  @media (max-width: 520px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .nav-btn { font-size: 11px; padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+        <path d="M7 13.5C8.5 15 10 16 12 16s4-1.5 5-3"/>
+        <path d="M8.5 9C9.5 7 11 6 12 6s2.5 1 3.5 3"/>
+        <path d="M12 6v10"/>
+      </svg>
+    </div>
+    <h1>Carbon <span>Footprint</span><br>Calculator</h1>
+    <p class="subtitle">EVS Project — Track &amp; Reduce Your CO₂ Impact</p>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('input')">Calculate</button>
+    <button class="nav-btn" onclick="showPage('results')">Results</button>
+    <button class="nav-btn" onclick="showPage('tips')">Tips</button>
+    <button class="nav-btn" onclick="showPage('history')">History</button>
+  </nav>
+
+  <!-- INPUT PAGE -->
+  <div class="page active" id="page-input">
+    <div class="card">
+      <p class="card-title">Transport</p>
+      <div class="slider-row">
+        <div class="slider-label"><span>Car travel (km/day)</span><span class="val" id="v-car">20 km</span></div>
+        <input type="range" min="0" max="150" value="20" step="1" id="s-car" oninput="syncSlider('car','km')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>2-wheeler (km/day)</span><span class="val" id="v-bike">5 km</span></div>
+        <input type="range" min="0" max="80" value="5" step="1" id="s-bike" oninput="syncSlider('bike','km')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Bus / train (km/day)</span><span class="val" id="v-bus">3 km</span></div>
+        <input type="range" min="0" max="100" value="3" step="1" id="s-bus" oninput="syncSlider('bus','km')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Flights per year</span><span class="val" id="v-flight">2</span></div>
+        <input type="range" min="0" max="30" value="2" step="1" id="s-flight" oninput="syncSlider('flight','')">
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Home Energy</p>
+      <div class="slider-row">
+        <div class="slider-label"><span>Electricity (kWh/day)</span><span class="val" id="v-elec">8 kWh</span></div>
+        <input type="range" min="0" max="40" value="8" step="1" id="s-elec" oninput="syncSlider('elec','kWh')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>LPG cylinders/month</span><span class="val" id="v-lpg">1</span></div>
+        <input type="range" min="0" max="8" value="1" step="1" id="s-lpg" oninput="syncSlider('lpg','')">
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Food &amp; Lifestyle</p>
+      <div class="slider-row">
+        <div class="slider-label"><span>Meat meals per week</span><span class="val" id="v-meat">5</span></div>
+        <input type="range" min="0" max="21" value="5" step="1" id="s-meat" oninput="syncSlider('meat','')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Single-use plastics/day</span><span class="val" id="v-plastic">3</span></div>
+        <input type="range" min="0" max="20" value="3" step="1" id="s-plastic" oninput="syncSlider('plastic','')">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Online orders per week</span><span class="val" id="v-online">2</span></div>
+        <input type="range" min="0" max="20" value="2" step="1" id="s-online" oninput="syncSlider('online','')">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Calculate My Footprint →</button>
+  </div>
+
+  <!-- RESULTS PAGE -->
+  <div class="page" id="page-results">
+    <div class="result-hero">
+      <div class="result-grade" id="r-grade">—</div>
+      <div class="result-label" id="r-grade-label">Calculate first</div>
+      <div class="result-big" id="r-annual">—</div>
+      <div class="result-unit">tonnes CO₂ per year</div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="mlabel">Daily CO₂</div>
+        <div class="mval" id="r-daily" style="color:var(--green-light)">—</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">kg/day</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">vs India avg</div>
+        <div class="mval" id="r-india">—</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">India: 1.9 t/yr</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">vs Global avg</div>
+        <div class="mval" id="r-global">—</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Global: 4.7 t/yr</div>
+      </div>
+    </div>
+
+    <div class="breakdown card" style="padding:1.5rem">
+      <p class="card-title">Breakdown by category</p>
+      <div id="breakdown-bars"></div>
+    </div>
+
+    <div class="chart-wrap">
+      <p class="card-title">Emission share</p>
+      <div class="chart-inner">
+        <canvas id="pieChart" height="260"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Global comparison</p>
+      <div class="compare-section" id="compare-bars"></div>
+    </div>
+  </div>
+
+  <!-- TIPS PAGE -->
+  <div class="page" id="page-tips">
+    <div id="tips-container">
+      <div style="text-align:center;padding:3rem;color:var(--text3);font-size:14px">
+        Calculate your footprint first to get personalised tips.
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+    <div id="history-list"></div>
+  </div>
+
+</div>
+
+<script>
+let pieChart = null;
+
+function syncSlider(id, unit) {
+  const val = document.getElementById('s-' + id).value;
+  document.getElementById('v-' + id).textContent = val + (unit ? ' ' + unit : '');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const idx = ['input','results','tips','history'].indexOf(name);
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function calculate() {
+  const car     = +document.getElementById('s-car').value;
+  const bike    = +document.getElementById('s-bike').value;
+  const bus     = +document.getElementById('s-bus').value;
+  const flight  = +document.getElementById('s-flight').value;
+  const elec    = +document.getElementById('s-elec').value;
+  const lpg     = +document.getElementById('s-lpg').value;
+  const meat    = +document.getElementById('s-meat').value;
+  const plastic = +document.getElementById('s-plastic').value;
+  const online  = +document.getElementById('s-online').value;
+
+  // Emission factors (kg CO2)
+  const tCar     = car    * 0.21;
+  const tBike    = bike   * 0.09;
+  const tBus     = bus    * 0.04;
+  const tFlight  = (flight * 255) / 365;
+  const tElec    = elec   * 0.82;
+  const tLpg     = (lpg   * 14.2) / 30;
+  const tMeat    = (meat  * 6.0) / 7;
+  const tPlastic = plastic * 0.006;
+  const tOnline  = (online * 0.5) / 7;
+
+  const transport = tCar + tBike + tBus + tFlight;
+  const energy    = tElec + tLpg;
+  const food      = tMeat + tPlastic + tOnline;
+  const daily     = transport + energy + food;
+  const annual    = (daily * 365) / 1000;
+
+  // Grade
+  let grade, gradeColor, gradeLabel;
+  if (annual < 1)      { grade='A+'; gradeColor='#4caf50'; gradeLabel='Exceptional — far below average'; }
+  else if (annual < 1.9) { grade='A'; gradeColor='#66bb6a'; gradeLabel='Great — below India average'; }
+  else if (annual < 3)   { grade='B'; gradeColor='#ffb74d'; gradeLabel='Average — room to improve'; }
+  else if (annual < 5)   { grade='C'; gradeColor='#ffa726'; gradeLabel='Above average — take action'; }
+  else if (annual < 8)   { grade='D'; gradeColor='#ef5350'; gradeLabel='High — significant action needed'; }
+  else                   { grade='F'; gradeColor='#e53935'; gradeLabel='Very high — urgent changes needed'; }
+
+  // Update results
+  document.getElementById('r-grade').textContent = grade;
+  document.getElementById('r-grade').style.color = gradeColor;
+  document.getElementById('r-grade-label').textContent = gradeLabel;
+  document.getElementById('r-annual').textContent = annual.toFixed(2);
+  document.getElementById('r-daily').textContent = daily.toFixed(1);
+
+  const indiaAvg = 1.9, globalAvg = 4.7;
+  const indiaDiff = annual - indiaAvg;
+  const globalDiff = annual - globalAvg;
+  const indiaEl = document.getElementById('r-india');
+  indiaEl.textContent = (indiaDiff >= 0 ? '+' : '') + indiaDiff.toFixed(2) + 't';
+  indiaEl.style.color = indiaDiff > 0 ? '#ef5350' : '#4caf50';
+  const globalEl = document.getElementById('r-global');
+  globalEl.textContent = (globalDiff >= 0 ? '+' : '') + globalDiff.toFixed(2) + 't';
+  globalEl.style.color = globalDiff > 0 ? '#ef5350' : '#4caf50';
+
+  // Breakdown bars
+  const cats = [
+    { name: 'Transport', val: transport, color: '#4caf50' },
+    { name: 'Energy',    val: energy,    color: '#378ADD' },
+    { name: 'Food',      val: food,      color: '#ffb74d' }
+  ];
+  const maxVal = Math.max(...cats.map(c => c.val), 0.01);
+  document.getElementById('breakdown-bars').innerHTML = cats.map(c => `
+    <div class="brow">
+      <span class="blabel">${c.name}</span>
+      <div class="btrack">
+        <div class="bfill" style="width:${Math.round((c.val/maxVal)*100)}%;background:${c.color}"></div>
+      </div>
+      <span class="bnum">${c.val.toFixed(1)} kg/d</span>
+    </div>`).join('');
+
+  // Pie chart
+  if (pieChart) pieChart.destroy();
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  pieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Transport', 'Energy', 'Food & Lifestyle'],
+      datasets: [{
+        data: [transport.toFixed(2), energy.toFixed(2), food.toFixed(2)],
+        backgroundColor: ['#4caf50','#378ADD','#ffb74d'],
+        borderColor: '#111811',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#a5d6a7', font: { family: 'DM Sans', size: 12 }, padding: 16 }
+        }
+      },
+      animation: { animateRotate: true, duration: 800 }
+    }
+  });
+
+  // Compare bars
+  const comparisons = [
+    { label: 'You', val: annual, color: gradeColor },
+    { label: 'India avg', val: 1.9, color: '#4caf50' },
+    { label: 'Global avg', val: 4.7, color: '#ffb74d' },
+    { label: 'IPCC target', val: 2.0, color: '#378ADD' }
+  ];
+  const maxC = Math.max(...comparisons.map(c => c.val));
+  document.getElementById('compare-bars').innerHTML = comparisons.map(c => `
+    <div class="cmp-row">
+      <span class="cmp-label">${c.label}</span>
+      <div class="cmp-track">
+        <div class="cmp-fill" style="width:${Math.round((c.val/maxC)*100)}%;background:${c.color}"></div>
+      </div>
+      <span class="cmp-val">${c.val.toFixed(1)}t</span>
+    </div>`).join('');
+
+  // Tips
+  renderTips({ transport, energy, food, annual, tCar, tFlight, tElec, tLpg, tMeat, tPlastic, meat, plastic, car, flight });
+
+  // Save to history
+  const history = JSON.parse(localStorage.getItem('cfp-history') || '[]');
+  history.unshift({ date: new Date().toLocaleDateString('en-IN'), annual: annual.toFixed(2), grade });
+  if (history.length > 20) history.pop();
+  localStorage.setItem('cfp-history', JSON.stringify(history));
+
+  showPage('results');
+}
+
+function renderTips(d) {
+  const allTips = [
+    { show: d.tCar > 3, icon: '🚌', title: 'Switch to public transport', desc: 'Using buses or trains instead of a car for your daily commute can dramatically cut transport emissions.', save: `Save ~${(d.tCar * 0.7 * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.tFlight > 1, icon: '✈️', title: 'Reduce air travel', desc: 'One domestic flight emits roughly 255 kg CO₂. Consider trains for journeys under 500 km.', save: `Save ~${(d.tFlight * 0.5 * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.tElec > 5, icon: '💡', title: 'Switch to LED & unplug standby', desc: 'LED bulbs use 75% less energy. Unplugging electronics on standby saves 5–10% of your electricity bill.', save: `Save ~${(d.tElec * 0.2 * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.tLpg > 1, icon: '☀️', title: 'Install a solar water heater', desc: 'Solar water heaters can replace 60–70% of your LPG usage for hot water and pay back in 3 years.', save: `Save ~${(d.tLpg * 0.6 * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.meat > 3, icon: '🥗', title: 'Try 3 meat-free days per week', desc: 'Livestock farming accounts for 14.5% of global emissions. Cutting 3 meat meals per week has big impact.', save: `Save ~${(d.tMeat * 0.43 * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.plastic > 2, icon: '♻️', title: 'Ditch single-use plastics', desc: 'Carry a reusable bag and bottle. Single-use plastics require energy-intensive production and end up in landfills.', save: `Save ~${(d.tPlastic * 365 / 1000).toFixed(2)} t CO₂/year` },
+    { show: d.annual > 1.5, icon: '🌳', title: 'Plant trees to offset', desc: 'A mature tree absorbs ~22 kg CO₂/year. Planting trees and supporting reforestation helps offset what you can\'t cut.', save: `You need ~${Math.ceil(d.annual * 1000 / 22)} trees to offset your footprint` },
+    { show: true, icon: '🏡', title: 'Compost kitchen waste', desc: 'Food waste in landfills produces methane, a potent greenhouse gas. Composting eliminates this and enriches soil.', save: 'Reduces methane production from waste' },
+  ];
+
+  const active = allTips.filter(t => t.show);
+  document.getElementById('tips-container').innerHTML = `
+    <div class="card" style="margin-bottom:1rem">
+      <p class="card-title">Personalised recommendations</p>
+      <p style="font-size:13px;color:var(--text3);font-weight:300">Based on your footprint of <strong style="color:var(--green-light)">${d.annual.toFixed(2)} t CO₂/year</strong></p>
+    </div>
+    ${active.map(t => `
+      <div class="tip-card">
+        <div class="tip-icon">${t.icon}</div>
+        <div>
+          <div class="tip-title">${t.title}</div>
+          <div class="tip-desc">${t.desc}</div>
+          <div class="tip-save">${t.save}</div>
+        </div>
+      </div>`).join('')}`;
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('cfp-history') || '[]');
+  const el = document.getElementById('history-list');
+  if (!history.length) {
+    el.innerHTML = '<div class="history-empty">No calculations saved yet.<br>Go calculate your footprint first!</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:1rem">
+      <p class="card-title">Past calculations</p>
+      <p style="font-size:13px;color:var(--text3);font-weight:300">Your last ${history.length} result${history.length > 1 ? 's' : ''} — saved locally on your device</p>
+    </div>
+    ${history.map(h => `
+      <div class="history-item">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${h.annual} t CO₂/year <span class="history-grade">${h.grade}</span></div>
+          <div class="history-date">${h.date}</div>
+        </div>
+      </div>`).join('')}
+    <button class="clear-btn" onclick="clearHistory()">Clear history</button>`;
+}
+
+function clearHistory() {
+  localStorage.removeItem('cfp-history');
+  renderHistory();
+}
+</script>
+</body>
+</html>
