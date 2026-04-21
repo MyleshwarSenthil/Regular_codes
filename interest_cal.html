@@ -1,0 +1,22 @@
+<div>
+    <label>Enter amount: </label>
+    <input type = "number" id="am"><br><br>
+    <label>Enter interest rate: </label>
+    <input type = "number" id="ra"><br><br>
+    <label>Enter year: </label>
+    <input type="number" id="ye"><br><br>
+    <button onclick="calculate()">Calculate</button>
+    <p id="result"></p>
+</div>
+
+<script>
+    function calculate(){
+        const amount = document.getElementById("am").value;
+        const rate = document.getElementById("ra").value;
+        const year = document.getElementById("ye").value;
+
+        
+        const out = (amount / 100 * rate) * year;
+        document.getElementById("result").innerText = "Total interest is $"+out;
+    }
+</script>
