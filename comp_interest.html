@@ -1,0 +1,29 @@
+<div>
+    <h3>Welcome to Compound Interest calculator</h3><br>
+    <label>Enter amount: </label>
+    <input type = "number" id="am"><br><br>
+    <label>Enter interest rate: </label>
+    <input type = "number" id="ra"><br><br>
+    <label>Enter year: </label>
+    <input type="number" id="ye"><br><br>
+    <button onclick="calculate()">Calculate</button>
+    <p id="result"></p>
+</div>
+
+<script>
+    function calculate(){
+        let amount = parseFloat(document.getElementById("am").value);
+        const rate = parseFloat(document.getElementById("ra").value);
+        const year = parseInt(document.getElementById("ye").value);
+
+        let interest;
+
+        for (let i = 1; i <= year; i++) {
+            interest = (amount / 100) * rate;
+            amount = amount + interest;   
+        }
+        
+        document.getElementById("result").innerText = "Compound interest is: "+amount.toFixed(2);
+
+    }
+</script>
