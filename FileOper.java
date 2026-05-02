@@ -1,19 +1,15 @@
-import java.io.*;
+import  java.io.*;
 
 class FileOper{
-    public static void main(String [] args){
-        File a = new File("waste.txt");
+    public static void main(String[] args){
         try{
-            if(a.createNewFile()){
-            System.out.println("File created");
-
-            }
-            else{
-                System.out.println("File already exists");
-            }
+        FileWriter f = new FileWriter("waste.txt");
+        f.write("This contains nothing!");
+        f.close();
+        System.out.println("Data Writed");
         }
         catch(Exception e){
-            System.out.println("Cannot create file");
+            System.out.println("Exception caught");
         }
     }
 }
