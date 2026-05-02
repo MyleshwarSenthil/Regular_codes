@@ -1,17 +1,19 @@
 import java.io.*;
-import java.util.*;
 
 class FileOper{
-    public static void main(String[] aegs){
-        File f = new File("faaaaa.txt");
+    public static void main(String [] args){
+        File a = new File("waste.txt");
         try{
-        Scanner sc= new Scanner(f);
-        String d = sc.nextLine();
-        System.out.println(d);
+            if(a.createNewFile()){
+            System.out.println("File created");
 
+            }
+            else{
+                System.out.println("File already exists");
+            }
         }
-        catch(IOException e){
-            System.out.println("dfgh");
+        catch(Exception e){
+            System.out.println("Cannot create file");
         }
     }
 }
