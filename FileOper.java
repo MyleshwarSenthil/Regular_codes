@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-class kuppa{
+class FileOper{
     public static void main(String[] args){
         File f = new File("summa1.txt");
         try{
