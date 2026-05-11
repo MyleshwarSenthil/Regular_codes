@@ -8,13 +8,14 @@ class overRideEx{
 }
 
 class sample{
-    public static void sum(){
+    public void sum(){
         System.out.println("Sample");
     }
 }
 
 class sample2 extends sample{
-    public static void sum(){
+    public void sum(){
         System.out.println("This is the overrided method");
+        super.sum();
     }    
 }
