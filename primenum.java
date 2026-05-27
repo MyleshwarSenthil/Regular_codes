@@ -3,6 +3,9 @@ import java.util.*;
 class primenum{
     public static void main(String[] args){
         Scanner sc = new Scanner(System.in);
+        String user;
+
+        do{
         System.out.println("Enter the int value: ");
         int a = sc.nextInt();
 
@@ -12,6 +15,13 @@ class primenum{
         else{
             System.out.println(a+ " is not a prime number");
         }
+
+        System.out.println("Do you want to continue again? ");
+        String waste = sc.nextLine();
+        user = sc.nextLine();
+        }while(user.equals("y"));
+        System.out.println("Ok thank you!");
+       
 
     }
 
