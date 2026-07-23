@@ -35,7 +35,7 @@ class LinkedList {
         }
         System.out.println("null");
     }
-}
+}               
 
 public class LL {
     public static void main(String[] args) {
@@ -46,6 +46,9 @@ public class LL {
         list = LinkedList.insert(list, 3);
         list = LinkedList.insert(list, 4);
         list = LinkedList.insert(list, 5);
+
+        LinkedList.printList(list);
+
         System.out.println(ListNode(list.head));
         
         System.out.println(ListNode(list.head));
